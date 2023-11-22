@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Set your Quandl API key
-quandl.ApiConfig.api_key = 'YourQuandlApiKey'
+quandl.ApiConfig.api_key = 'LFz89yQvKn-ywskWRxAS'
 
 # Fetch the dataset from Quandl (Replace 'DATASET_CODE' with the code for Vanguard Total World Stock ETF)
 data = quandl.get('DATASET_CODE', start_date='2010-01-01', end_date='2020-12-31')
