@@ -1,0 +1,6 @@
+{
+    "indicators": [
+        {"type": "SMA", "period": 20},
+        {"type": "EMA", "period": 50}
+    ]
+}
