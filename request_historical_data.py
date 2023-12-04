@@ -3,8 +3,10 @@
 
 import json
 import pandas as pd
-import mplfinance as mpf
 import talib
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from mplfinance.original_flavor import candlestick_ohlc
 # Disable SSL Warnings
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -19,7 +21,6 @@ def read_historical_data(file_path):
 def input_parameters():
     with open('config.json', 'r') as file:
         config = json.load(file)
-    
     return config['indicators']
 
 
@@ -33,7 +34,6 @@ def add_indicators(df, indicator_type, period):
 
 def preprocess_data(data, indicators):
     df = pd.DataFrame(data['data'])
-
     # Convert timestamp to datetime and set as index
     df['t'] = pd.to_datetime(df['t'], unit='ms')
     df.set_index('t', inplace=True)
@@ -47,46 +47,48 @@ def preprocess_data(data, indicators):
 
     return df
 
-
-
 def plotCandlestick(df, indicators):
-    ap = []  # List to store additional plots
+    # Convert datetime index to matplotlib date format
+    df['Date'] = [mdates.date2num(d) for d in df.index]
+    quotes = [tuple(x) for x in df[['Date', 'Open', 'High', 'Low', 'Close']].values]
 
-    # Loop through each indicator in the list
+    # Initialize the plot
+    fig, ax = plt.subplots(figsize=(16, 9))
+
+    # Plot candlestick chart
+    candlestick_ohlc(ax, quotes, width=0.6/(24*60), colorup='green', colordown='red', alpha=0.8)
+
+    # Plot indicators
     for indicator in indicators:
         if indicator['type'] == 'SMA':
-            ap.append(mpf.make_addplot(df['SMA'], color='blue', label='SMA ' + str(indicator['period'])))
+            ax.plot(df['Date'], df['SMA'], label='SMA ' + str(indicator['period']), color='blue',linewidth=1)
         elif indicator['type'] == 'EMA':
-            ap.append(mpf.make_addplot(df['EMA'], color='green', label='EMA ' + str(indicator['period'])))
-        # Add more conditions for other indicators
-    # Plot trade entry points
-    entry_points = df[df['Trade Entry'] != 0]
-    ap.append(mpf.make_addplot(entry_points['Trade Entry'], type='scatter', markersize=100, marker='^', color='green'))
+            ax.plot(df['Date'], df['EMA'], label='EMA ' + str(indicator['period']), color='green',linewidth=1)
 
-    # Plot trade exit points
-    exit_points = df[df['Trade Exit'] != 0]
-    ap.append(mpf.make_addplot(exit_points['Trade Exit'], type='scatter', markersize=100, marker='v', color='red'))
+    # Plot trade entry and exit points
+    entry_points = df[df['Position'] == 1]
+    exit_points = df[df['Position'] == -1]
+    if not entry_points.empty:
+        ax.scatter(entry_points['Date'], entry_points['Close'], color='lime', marker='^', s=100, label='Entry Points')
+    if not exit_points.empty:
+        ax.scatter(exit_points['Date'], exit_points['Close'], color='fuchsia', marker='v', s=100, label='Exit Points')
 
-    # Plotting with all the indicators and trade points
-    mpf.plot(df, type='candle', style='charles', title='S&P 500 Price Action', addplot=ap, figratio=(16, 9), figscale=1.2)
+    # Formatting and showing the plot
+    ax.xaxis_date()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    ax.legend()
+    plt.title('S&P 500 Price Action')
+    plt.show()
 
-    # Plotting with all the indicators
-    mpf.plot(df, type='candle', style='charles', title='S&P 500 Price Action', addplot=ap, figratio=(16, 9), figscale=1.2)
-
-
-
-
-def backtest_strategy(df, indicators):
+def backtest_strategy(df):
+    
     initial_balance = 1000  # Starting balance in euros
-    trade_amount = 100     # Amount in euros invested per trade
-    df['Balance'] = initial_balance
+    balance = initial_balance
+    trade_amount = 1000     # Amount in euros invested per trade
     df['entered'] = 0
     df['Trade Entry'] = 0
     df['Trade Exit'] = 0
 
-    for indicator in indicators:
-        indicator_name = indicator['type'] + ' ' + str(indicator['period'])
-        # Add your indicator-specific logic here
 
     df['Cross'] = df['SMA'] - df['EMA']
     df['SMA_Diff'] = df['SMA'].diff()
@@ -94,51 +96,79 @@ def backtest_strategy(df, indicators):
     df['SMA_Valley'] = (df['SMA_Diff'].shift(1) < 0) & (df['SMA_Diff'] > 0)
     df['Position'] = 0
 
+    
     for i in range(1, len(df)):
+
+        ## Not in a trade
         if df['entered'].iloc[i-1] == 0:  # Not currently in a trade
             if df['Cross'].iloc[i] < 0 and df['SMA_Valley'].iloc[i]:  # Buy condition
                 df['Position'].iloc[i] = 1
                 df['entered'].iloc[i] = 1
-            elif df['Cross'].iloc[i] > 0 and df['SMA_Peak'].iloc[i]:  # Sell condition
+                Price = df['Close'].iloc[i]
+                balance = initial_balance-trade_amount
+
+
+        ## In a trade
+        if df['entered'].iloc[i-1] == 1 and balance is not 0:  #currently in a trade
+            if df['Cross'].iloc[i] < 0 and df['SMA_Valley'].iloc[i]:  # Buy condition
+                df['Position'].iloc[i] = 1
+                df['entered'].iloc[i] = 1
+                Price = df['Close'].iloc[i]
+                
+            # Sell condition        
+            if df['Cross'].iloc[i] > 0 and df['SMA_Peak'].iloc[i] and df['Close'].iloc[i]>=Price*1.02:  # Sell condition
                 df['Position'].iloc[i] = -1
                 df['entered'].iloc[i] = 0
-        else:
-            # Continue the current trade
-            df['entered'].iloc[i] = df['entered'].iloc[i-1]
-            if df['Position'].iloc[i-1] == 1 and df['Cross'].iloc[i] > 0:  # Exit condition for buy trade
-                df['Position'].iloc[i] = -1
-                df['entered'].iloc[i] = 0
-                # Mark trade entry and exit
-    if df['Position'].iloc[i] == 1 and df['entered'].iloc[i] == 1:
-        df['Trade Entry'].iloc[i] = df['Close'].iloc[i]
-    elif df['Position'].iloc[i] == -1 and df['entered'].iloc[i] == 0:
-        df['Trade Exit'].iloc[i] = df['Close'].iloc[i]
-
-    # Calculate trade returns and update balance
-    df['Trade Return'] = df['Close'].pct_change() * df['Position'].shift(1)
-    for i in range(1, len(df)):
-        if df['Position'].iloc[i] == 1:
-            df['Balance'].iloc[i] = df['Balance'].iloc[i-1] - trade_amount
-        elif df['Position'].iloc[i] == -1:
-            df['Balance'].iloc[i] = df['Balance'].iloc[i-1] + trade_amount * (1 + df['Trade Return'].iloc[i])
-        else:
-            df['Balance'].iloc[i] = df['Balance'].iloc[i-1]
-
+            else:
+                # Continue the current trade
+                df['entered'].iloc[i] = df['entered'].iloc[i-1]
+    # Calculate returns
     return df
+
+    # Variables to keep track of the current trade
+    
+def Calculate_returns(df):    
+    current_exit_price = None
+    Trades = pd.DataFrame(columns=['Time_entry', 'Price_entry', 'Time_exit', 'Price_exit', 'Return_Percentage', 'Return_Euro'])    
+    Current_trades = pd.Series(name='Price')
+    avg_entry_price=0
+    # Calculate returns and record trades
+    for i in range(1, len(df)-1):
+        if df['Position'].iloc[i] == 1:
+            time_entry= df.index[i+1]
+            Current_trades = Current_trades.append(pd.Series([df['Close'].iloc[i+1]], name='Price'))
+            current_exit_price = None  # Reset exit price for new trade
+        elif df['Position'].iloc[i] == -1 and avg_entry_price is not 0:
+            time_exit= df.index[i+1]
+            avg_entry_price = sum(Current_trades)/len(Current_trades)
+            # Calculate returns
+            return_percentage = (current_exit_price - avg_entry_price) / avg_entry_price -0.2*(current_exit_price - avg_entry_price) / avg_entry_price
+            return_euro = return_percentage * trade_amount
+            # Record the trade
+            Trades = Trades._append({
+            'Time_entry': time_entry, 
+            'Price_entry': current_entry_price, 
+            'Time_exit': time_exit, 
+            'Price_exit': current_exit_price, 
+            'Return_Percentage': return_percentage, 
+            'Return_Euro': return_euro
+        }, ignore_index=True)
+
+            # Update total return
+            balance = balance + return_euro
+            total_return_percentage = (balance + return_euro)/initial_balance
+            Current_trades = pd.Series(name='Price')
+            avg_entry_price = 0
+    print(f"Final Balance: {balance}")
+    print(f"Return Percentage: {total_return_percentage}")
+    return Trades
 
 
 
 if __name__ == "__main__":
-    file_path = 'historical_data_2M_5min.json'
+    file_path = 'historical_data_1y_1h.json'
     data = read_historical_data(file_path)
     indicators = input_parameters()
-    print(indicators)  # Check the structure of indicators
-
-    # Apply all indicators
     df = preprocess_data(data, indicators)
-
-
-    backtest_results = backtest_strategy(df, indicators)
-
-    # Plot with all indicators and trade points
-    plotCandlestick(backtest_results, indicators)
+    df,Trades = backtest_strategy(df)
+    plotCandlestick(df, indicators)
