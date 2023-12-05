@@ -10,6 +10,9 @@ from mplfinance.original_flavor import candlestick_ohlc
 # Disable SSL Warnings
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+pd.options.mode.chained_assignment = None  # Suppress specific SettingWithCopyWarning
 
 
 
@@ -84,7 +87,7 @@ def backtest_strategy(df):
     
     initial_balance = 1000  # Starting balance in euros
     balance = initial_balance
-    trade_amount = 1000     # Amount in euros invested per trade
+    trade_amount = 100     # Amount in euros invested per trade
     df['entered'] = 0
     df['Trade Entry'] = 0
     df['Trade Exit'] = 0
@@ -104,8 +107,8 @@ def backtest_strategy(df):
             if df['Cross'].iloc[i] < 0 and df['SMA_Valley'].iloc[i]:  # Buy condition
                 df['Position'].iloc[i] = 1
                 df['entered'].iloc[i] = 1
-                Price = df['Close'].iloc[i]
-                balance = initial_balance-trade_amount
+                Price1 = df['Close'].iloc[i]
+                #balance = initial_balance - trade_amount
 
 
         ## In a trade
@@ -116,10 +119,12 @@ def backtest_strategy(df):
                 Price = df['Close'].iloc[i]
                 
             # Sell condition        
-            if df['Cross'].iloc[i] > 0 and df['SMA_Peak'].iloc[i] and df['Close'].iloc[i]>=Price*1.02:  # Sell condition
+            if df['Cross'].iloc[i] > 0 and df['SMA_Peak'].iloc[i] and df['Close'].iloc[i]>=Price1*1.05:  # Sell condition
                 df['Position'].iloc[i] = -1
                 df['entered'].iloc[i] = 0
+                #balance = balance + trade_amount
             else:
+                
                 # Continue the current trade
                 df['entered'].iloc[i] = df['entered'].iloc[i-1]
     # Calculate returns
@@ -128,26 +133,37 @@ def backtest_strategy(df):
     # Variables to keep track of the current trade
     
 def Calculate_returns(df):    
+    initial_balance = 1000  # Starting balance in euros
+    balance = initial_balance
+    trade_amount = 100     # Amount in euros invested per trade
+    currently_traded = 0
     current_exit_price = None
+    total_return_percentage = 0
     Trades = pd.DataFrame(columns=['Time_entry', 'Price_entry', 'Time_exit', 'Price_exit', 'Return_Percentage', 'Return_Euro'])    
-    Current_trades = pd.Series(name='Price')
-    avg_entry_price=0
+    Current_trades = pd.DataFrame(columns=['Time_entry', 'Price_entry'])
+    avg_entry_price = 0
+    
     # Calculate returns and record trades
     for i in range(1, len(df)-1):
         if df['Position'].iloc[i] == 1:
-            time_entry= df.index[i+1]
-            Current_trades = Current_trades.append(pd.Series([df['Close'].iloc[i+1]], name='Price'))
+            time_entry = df.index[i+1]
+            Current_trades = Current_trades._append({'Time_entry': time_entry, 'Price_entry': df['Close'].iloc[i+1]}, ignore_index=True)
             current_exit_price = None  # Reset exit price for new trade
-        elif df['Position'].iloc[i] == -1 and avg_entry_price is not 0:
+            avg_entry_price = sum(Current_trades['Price_entry'])/len(Current_trades)
+            currently_traded += currently_traded + trade_amount
+            
+        elif df['Position'].iloc[i] == -1 and avg_entry_price is not 0 and df['entered'].iloc[i-1]:
             time_exit= df.index[i+1]
-            avg_entry_price = sum(Current_trades)/len(Current_trades)
+            avg_entry_price = sum(Current_trades['Price_entry'])/len(Current_trades)
+            current_exit_price = df['Close'].iloc[i]
             # Calculate returns
-            return_percentage = (current_exit_price - avg_entry_price) / avg_entry_price -0.2*(current_exit_price - avg_entry_price) / avg_entry_price
-            return_euro = return_percentage * trade_amount
+            return_percentage = (current_exit_price - avg_entry_price) / avg_entry_price * 0.9
+            return_euro = return_percentage * trade_amount*len(Current_trades)
+            
             # Record the trade
             Trades = Trades._append({
             'Time_entry': time_entry, 
-            'Price_entry': current_entry_price, 
+            'Price_entry': avg_entry_price, 
             'Time_exit': time_exit, 
             'Price_exit': current_exit_price, 
             'Return_Percentage': return_percentage, 
@@ -157,10 +173,16 @@ def Calculate_returns(df):
             # Update total return
             balance = balance + return_euro
             total_return_percentage = (balance + return_euro)/initial_balance
-            Current_trades = pd.Series(name='Price')
+            Current_trades = pd.DataFrame(columns=['Time_entry', 'Price_entry'])
             avg_entry_price = 0
+    
+    index_percentage =(df['Close'].iloc[-1]-df['Close'].iloc[1])/df['Close'].iloc[1]*0.8 +1
+    index_return = index_percentage*initial_balance
+            
     print(f"Final Balance: {balance}")
     print(f"Return Percentage: {total_return_percentage}")
+    print(f"Return of the index:{index_return}")
+    print(f"percentage of the index:{index_percentage}")
     return Trades
 
 
@@ -170,5 +192,6 @@ if __name__ == "__main__":
     data = read_historical_data(file_path)
     indicators = input_parameters()
     df = preprocess_data(data, indicators)
-    df,Trades = backtest_strategy(df)
+    df = backtest_strategy(df)
+    Trades = Calculate_returns(df)
     plotCandlestick(df, indicators)
