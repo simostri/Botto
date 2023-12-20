@@ -4,11 +4,11 @@ import talib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mplfinance.original_flavor import candlestick_ohlc
-
+import time
 import datetime
 import pandas_ta as ta
 import pandas as pd
-
+from backtesting.test import SMA
 from backtesting import Backtest
 from backtesting import Strategy
 from backtesting.lib import crossover
@@ -18,6 +18,9 @@ import numpy as np
 
 # Disable SSL Warnings
 import urllib3
+
+def EMA(arr: pd.Series,n: int) -> pd.Series:
+    return talib.EMA(arr, timeperiod=n)
 
 
 def read_historical_data(file_path):
@@ -37,37 +40,59 @@ def preprocess_data(data):
     return df
 
 
-class SmaCross(Strategy):
-    n1 = 20
-    n2 = 20
+class DollarCostAveraging(Strategy):
+    n1 = 50
+    n2 = 50
 
     # Do as much initial computation as possible
     def init(self):
         close = self.data.Close
-        self.sma = talib.SMA(close , timeperiod=self.n1)
-        self.ema = talib.EMA(close , timeperiod=self.n2)
-    
+        self.sma = self.I(SMA, close, self.n1) 
+        #self.ema = self.I(EMA, close, self.n2) 
+        self.ema = self.I(EMA, close, self.n2) 
+        
         self.cross = self.sma -self.ema
-        sma_diff = np.diff(self.sma)
-        self.sma_diff = np.insert(sma_diff, 0, np.nan)
-        self.sma_peak = (sma_diff[:-1] >= 0) & (sma_diff[1:] < 0)
-        self.sma_valley = (sma_diff[:-1] <= 0) & (sma_diff[1:] > 0)
-        print('bought')
+        self.sma_diff = np.diff(self.sma,prepend=np.nan)
+        
+        sma_peak = (self.sma_diff[:-1] >= 0) & (self.sma_diff[1:] < 0)
+        self.sma_peak = np.insert(sma_peak, 0, False)
+        
+        self.sma_valley = np.insert((self.sma_diff[:-1] <= 0) & (self.sma_diff[1:] > 0), 0, False)
+        self.Sell_Signal =(self.cross > 0) & self.sma_peak
+        self.Buy_Signal = (self.cross < 0) & self.sma_valley
+        global Data
+        Data = pd.DataFrame({
+            'Close': close,
+            'Open': self.data.Open,
+            'High': self.data.High,
+            'Low': self.data.Low,
+            'Volume': self.data.Volume,
+            'SMA': self.sma,
+            'EMA': self.ema,
+            'SMA_Diff': self.sma_diff,
+            'SMA_Peak': self.sma_peak,
+            'SMA_Valley': self.sma_valley,
+            'Cross': self.cross,
+            'Buy_Signal': (self.cross < 0) & self.sma_valley,
+            'Sell_Signal': (self.cross > 0) & self.sma_peak
+        }, index=self.data.index)
         
     def next(self):
-        if self.cross[-1] < 0 and self.sma_valley[-1]:
-            price = self.data.Close[-1]
-            self.buy(tp=1.02*price)
+        if self.Buy_Signal[-1]==True:#self.cross[-1] < 0 & self.sma_valley[-1]:
             print('bought')
-        elif (self.cross[-1] > 0 and self.sma_peak[-1]): #or (self.data.Close - self.data.Price >=1.03)
+            self.buy()
+            
+        elif self.Sell_Signal[-1]==True and self.data.Close[-1] >= self.trades[0].entry_price*1.2:
             self.position.close()
             print('sold')
+            self.closed_trades
 
 
 file_path = 'historical_data_1y_1h.json'
 data = read_historical_data(file_path)
 data = preprocess_data(data)
-bt = Backtest(data, SmaCross, cash=1000, commission=.002)
+bt = Backtest(data, DollarCostAveraging, cash=500, commission=.002,exclusive_orders=False)
 stats = bt.run()
+bt.plot(filename='test_plot')
 print(stats)
-#bt.plot()
+
