@@ -173,6 +173,10 @@ portfolios = [
         'Lyxor Commodities Refinitiv/CoreCommodity CRB TR UCITS',
         'SPDR MSCI World UCITS ETF'
     ]),
+    (['SGLD.MI.csv','SPPW.DE.csv'], [0.4,0.6], [
+        'Invesco Physical Gold A',
+        'SPDR MSCI World UCITS ETF'
+    ]),
     (['VBK.csv', 'VBR.csv', 'VUG.csv', 'VTV.csv', 'SGLD.MI.csv'], [0.05, 0.1, 0.7, 0.1, 0.05], [
         'Vanguard Small-Cap Growth Index Fund',
         'Vanguard Small-Cap Value Index Fund',
@@ -187,20 +191,20 @@ portfolios = [
 initial_budget = 10000  # Total budget for portfolio
 
 simulator = ETFPortfolioSimulator(path, portfolios, initial_budget)
-simulator.load_data(start_date='2019-03-01', end_date='2021-05-20')
+simulator.load_data(start_date='2019-03-01', end_date='2024-05-20')
 simulator.calculate_investment_values()
 simulator.calculate_investment_values_no_rebalance()
 simulator.calculate_percentage_increase_no_rebalance()
 simulator.plot_results()
 
 # Plot individual ETF investment values
-#simulator.plot_individual_investments()
+simulator.plot_individual_investments()
 
 # Plot no rebalance vs comparison
-#simulator.plot_no_rebalance_vs_comparison()
+simulator.plot_no_rebalance_vs_comparison()
 
 # Plot percentage increase without rebalancing
-#simulator.plot_percentage_increase_no_rebalance()
+simulator.plot_percentage_increase_no_rebalance()
 
 # Plot selected ETFs percentage increase
 
