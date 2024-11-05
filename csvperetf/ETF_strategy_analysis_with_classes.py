@@ -191,7 +191,7 @@ portfolios = [
 initial_budget = 10000  # Total budget for portfolio
 
 simulator = ETFPortfolioSimulator(path, portfolios, initial_budget)
-simulator.load_data(start_date='2019-03-01', end_date='2024-05-20')
+simulator.load_data(start_date='2024-01-01', end_date='2024-05-20')
 simulator.calculate_investment_values()
 simulator.calculate_investment_values_no_rebalance()
 simulator.calculate_percentage_increase_no_rebalance()

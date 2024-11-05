@@ -14,10 +14,10 @@ from backtesting import Strategy
 from backtesting.lib import crossover
 import backtesting
 import numpy as np
-#backtesting.set_bokeh_output(notebook=False)
+backtesting.set_bokeh_output(notebook=False)
 
 # Disable SSL Warnings
-import urllib3
+#import urllib3
 
 def EMA(arr: pd.Series,n: int) -> pd.Series:
     return talib.EMA(arr, timeperiod=n)
@@ -91,8 +91,10 @@ class DollarCostAveraging(Strategy):
 file_path = 'historical_data_1y_1h.json'
 data = read_historical_data(file_path)
 data = preprocess_data(data)
-bt = Backtest(data, DollarCostAveraging, cash=500, commission=.002,exclusive_orders=False)
+bt = Backtest(data, DollarCostAveraging, cash=1000, commission=.002, exclusive_orders=False)
 stats = bt.run()
+print('plotting')
 bt.plot(filename='test_plot')
+print('plot done')
 print(stats)
 

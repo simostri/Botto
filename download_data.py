@@ -13,7 +13,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def historicalData():
-    base_url = "https://localhost:5000/v1/api/"
+    base_url = "https://localhost:4002/v1/api/"
     endpoint = "hmds/history"
 
     conid = "conid=265598"

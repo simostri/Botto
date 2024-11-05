@@ -126,10 +126,11 @@ etfs = [
     ('VBR.csv', 'Vanguard Small-Cap Value Index Fund'),
     ('VUG.csv', 'Vanguard Growth Index Fund'),
     ('VTV.csv', 'Vanguard Value Index Fund'),
-    ('VOO.csv', 'Vanguard S&P 500')
+    ('VOO.csv', 'Vanguard S&P 500'),
+    ('SMH.csv', 'Vaneck Semiconductors UCITS ETF')
 ]
 
-annualized_revenue_df, annualized_revenue_array = plot_etf_prices_and_revenue(path, etfs, start_date='2019-03-01', end_date='2024-05-20')
+annualized_revenue_df, annualized_revenue_array = plot_etf_prices_and_revenue(path, etfs, start_date='2018-03-01', end_date='2024-05-20')
 print(annualized_revenue_df)
 print(annualized_revenue_array)
 
