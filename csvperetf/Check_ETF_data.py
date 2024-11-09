@@ -1,137 +1,107 @@
 import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-import plotly.io as pio
+from plot_utils import (
+    plot_total_investment, 
+    plot_individual_investments, 
+    plot_no_rebalance_vs_comparison, 
+    plot_percentage_increase_no_rebalance, 
+    plot_selected_etfs_percentage_increase
+)
 
-# Set default renderer to 'browser' for Spyder or other non-Jupyter environments
-pio.renderers.default = 'browser'
+class ETFPortfolioSimulator:
+    def __init__(self, path, portfolios, initial_budget):
+        self.path = path
+        self.portfolios = portfolios
+        self.initial_budget = initial_budget
+        self.portfolio_data = []
+        self.investment_values = []
+        self.investment_values_no_rebalance = []
+        self.total_investments = []
+        self.total_investments_no_rebalance = []
+        self.percentage_increase_no_rebalance = []
+        self.rebalance_dates = []
 
-def plot_etf_prices_and_revenue(path, etfs, start_date='2017-03-01', end_date=None):
-    etf_prices = {}
-    etf_revenue = {}
-    etf_annualized_revenue = {}
-    etf_std_dev = {}
-    etf_daily_returns = {}
+    def load_data(self, start_date='2017-03-01', end_date=None):
+        for portfolio_files, _, etf_names in self.portfolios:
+            portfolio_df_list = []
+            for file, etf_name in zip(portfolio_files, etf_names):
+                df = pd.read_csv(self.path + file, parse_dates=['Date'], index_col='Date', usecols=['Date', 'Close'])
+                if end_date:
+                    df = df[(df.index >= start_date) & (df.index <= end_date)]
+                else:
+                    df = df[df.index >= start_date]
+                df.rename(columns={'Close': etf_name}, inplace=True)
+                df['pct_revenue'] = (df[etf_name] / df[etf_name].iloc[0]) - 1
+                portfolio_df_list.append(df)
+            self.portfolio_data.append(portfolio_df_list)
 
-    for file, etf_name in etfs:
-        df = pd.read_csv(path + file, parse_dates=['Date'], index_col='Date', usecols=['Date', 'Close'])
-        if end_date:
-            df = df[(df.index >= start_date) & (df.index <= end_date)]
-        else:
-            df = df[df.index >= start_date]
-        df.rename(columns={'Close': etf_name}, inplace=True)
-        df['pct_revenue'] = (df[etf_name] / df[etf_name].iloc[0] - 1) * 100  # Calculate pct_revenue as percentage
-        etf_prices[etf_name] = df[etf_name]
-        etf_revenue[etf_name] = df['pct_revenue']
+    def calculate_investment_values(self):
+        dates = self.portfolio_data[0][0].index[:-1]
+        self.rebalance_dates = dates[dates.month % 6 == dates[0].month % 6]
         
-        # Compute annualized percentage revenue for each year
-        df['Year'] = df.index.year
-        annualized_revenue_per_year = df.groupby('Year').apply(
-            lambda x: (x[etf_name].iloc[-1] / x[etf_name].iloc[0] - 1) * 100
-        )
-        etf_annualized_revenue[etf_name] = annualized_revenue_per_year
-        
-        # Compute standard deviation of daily returns for each year
-        df['daily_return'] = df[etf_name].pct_change() * 100
-        std_dev_per_year = df.groupby('Year')['daily_return'].std()
-        etf_std_dev[etf_name] = std_dev_per_year
-        
-        # Store daily returns for correlation calculation
-        etf_daily_returns[etf_name] = df['daily_return']
+        for n, (portfolio_files, allocations, etf_names) in enumerate(self.portfolios):
+            quota_invested = [self.initial_budget * allocation for allocation in allocations]
+            current_investments = quota_invested.copy()
+            investment_values_over_time = {name: [] for name in etf_names}
+            total_investment_over_time = []
+            for date in dates:
+                if date in self.rebalance_dates:
+                    period_date_zero = date
+                    total_value = sum(current_investments)
+                    quota_invested = [total_value * allocation for allocation in allocations]
+                
+                percentage_increase = [1 for _ in allocations]
+                for i, df in enumerate(self.portfolio_data[n]):
+                    percentage_increase[i] = (df.loc[date].values[0] / df.loc[period_date_zero].values[0])
+                    current_investments[i] = quota_invested[i] * percentage_increase[i]
+                    investment_values_over_time[etf_names[i]].append(current_investments[i])
+                
+                total_investment_over_time.append(sum(current_investments))
+            
+            self.investment_values.append({name: pd.Series(data=investment_values_over_time[name], index=dates) for name in etf_names})
+            self.total_investments.append(pd.Series(data=total_investment_over_time, index=dates))
 
-    fig_prices = go.Figure()
-    fig_revenue = go.Figure()
-    
-    for etf_label, df in etf_prices.items():
-        fig_prices.add_trace(go.Scatter(x=df.index, y=df, mode='lines', name=etf_label))
-    
-    for etf_label, df in etf_revenue.items():
-        fig_revenue.add_trace(go.Scatter(x=df.index, y=df, mode='lines', name=etf_label))
-    
-    fig_prices.update_layout(
-        title='ETF Prices Over Time',
-        xaxis_title='Date',
-        yaxis_title='Price',
-        legend_title='ETF',
-        hovermode='x unified'
-    )
-    
-    fig_revenue.update_layout(
-        title='ETF Percentage Revenue Over Time',
-        xaxis_title='Date',
-        yaxis_title='Percentage Revenue',
-        legend_title='ETF',
-        hovermode='x unified'
-    )
-    
-    fig_prices.show()
-    fig_revenue.show()
-    
-    # Prepare data for the table
-    years = sorted(set(year for df in etf_annualized_revenue.values() for year in df.index))
-    annualized_revenue_df = pd.DataFrame(index=[etf for _, etf in etfs], columns=years)
-    std_dev_df = pd.DataFrame(index=[etf for _, etf in etfs], columns=years)
-    
-    for etf_label, annualized_revenue in etf_annualized_revenue.items():
-        for year in years:
-            annualized_revenue_df.at[etf_label, year] = annualized_revenue.get(year, None)
-    
-    for etf_label, std_dev in etf_std_dev.items():
-        for year in years:
-            std_dev_df.at[etf_label, year] = std_dev.get(year, None)
-    
-    # Calculate the average annualized revenue for each ETF
-    average_annualized_revenue = annualized_revenue_df.mean(axis=1)
-    annualized_revenue_df['Average'] = average_annualized_revenue
-    
-    # Compute normalized cross-correlation with SPDR MSCI World UCITS ETF and Vanguard S&P 500
-    reference_etfs = ['SPDR MSCI World UCITS ETF', 'Vanguard S&P 500']
-    cross_correlation_df = pd.DataFrame(index=[etf for _, etf in etfs], columns=reference_etfs)
-    
-    for etf_label, daily_returns in etf_daily_returns.items():
-        for ref_etf in reference_etfs:
-            if etf_label != ref_etf:
-                common_dates = daily_returns.dropna().index.intersection(etf_daily_returns[ref_etf].dropna().index)
-                cross_correlation = np.corrcoef(daily_returns[common_dates], etf_daily_returns[ref_etf][common_dates])[0, 1]
-                cross_correlation_df.at[etf_label, ref_etf] = cross_correlation
-    
-    # Add standard deviation columns to the annualized_revenue_df
-    for year in years:
-        annualized_revenue_df[f'StdDev_{year}'] = std_dev_df[year]
-    
-    # Add cross-correlation columns to the annualized_revenue_df
-    for ref_etf in reference_etfs:
-        annualized_revenue_df[f'Correlation with {ref_etf}'] = cross_correlation_df[ref_etf]
-    
-    # Convert DataFrame values to percentage format for the annualized revenue
-    annualized_revenue_df = annualized_revenue_df.applymap(lambda x: f"{x:.2f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-    
-    # Convert the DataFrame to a NumPy array
-    annualized_revenue_array = annualized_revenue_df.replace('%', '', regex=True).astype(float).values
-    
-    return annualized_revenue_df, annualized_revenue_array
+    def calculate_investment_values_no_rebalance(self):
+        dates = self.portfolio_data[0][0].index[:-1]
+        
+        for n, (portfolio_files, allocations, etf_names) in enumerate(self.portfolios):
+            quota_invested = [self.initial_budget * allocation for allocation in allocations]
+            investment_values_no_rebalance = {name: [] for name in etf_names}
+            total_investment_no_rebalance_over_time = []
+            
+            for date in dates:
+                current_investments = quota_invested.copy()
+                for i, df in enumerate(self.portfolio_data[n]):
+                    percentage_increase = (df.loc[date].values[0] / df.loc[dates[0]].values[0])
+                    current_investments[i] = quota_invested[i] * percentage_increase
+                    investment_values_no_rebalance[etf_names[i]].append(current_investments[i])
+                
+                total_investment_no_rebalance_over_time.append(sum(current_investments))
+            
+            self.investment_values_no_rebalance.append({name: pd.Series(data=investment_values_no_rebalance[name], index=dates) for name in etf_names})
+            self.total_investments_no_rebalance.append(pd.Series(data=total_investment_no_rebalance_over_time, index=dates))
+
+    def calculate_percentage_increase_no_rebalance(self):
+        dates = self.portfolio_data[0][0].index[:-1]
+        
+        for n, (portfolio_files, allocations, etf_names) in enumerate(self.portfolios):
+            percentage_increase_no_rebalance = {name: [] for name in etf_names}
+            
+            for date in dates:
+                for i, df in enumerate(self.portfolio_data[n]):
+                    percentage_increase = (df.loc[date].values[0] / df.loc[dates[0]].values[0])
+                    percentage_increase_no_rebalance[etf_names[i]].append(percentage_increase)
+            
+            self.percentage_increase_no_rebalance.append({name: pd.Series(data=percentage_increase_no_rebalance[name], index=dates) for name in etf_names})
 
 # Usage
 path = "/home/simone/Finance/Botto/csvperetf/"
-etfs = [
-    ('IUST.DE.csv', 'SPDR Bloomberg Barclays US TIPS UCITS ETF'),
-    ('IBGX.SW.csv', 'Invesco Euro Government Bond 3-5 Year'),
-    ('US10.PA.csv', 'Lyxor US Treasury 10+Y (DR) UCITS'),
-    ('IBCI.L.csv', 'Lyxor Euro Government Inflation Linked Bond (DR)'),
-    ('IBGL.L.csv', 'iShares Euro Government Bond 15-30yr UCITS'),
-    ('SGLD.MI.csv', 'Invesco Physical Gold A'),
-    ('ICOM.L.csv', 'Lyxor Commodities Refinitiv/CoreCommodity CRB TR UCITS'),
-    ('SPPW.DE.csv', 'SPDR MSCI World UCITS ETF'),
-    ('VBK.csv', 'Vanguard Small-Cap Growth Index Fund'),
-    ('VBR.csv', 'Vanguard Small-Cap Value Index Fund'),
-    ('VUG.csv', 'Vanguard Growth Index Fund'),
-    ('VTV.csv', 'Vanguard Value Index Fund'),
-    ('VOO.csv', 'Vanguard S&P 500'),
-    ('SMH.csv', 'Vaneck Semiconductors UCITS ETF')
+portfolios = [
+    # Portfolio definitions as in the original script...
 ]
+initial_budget = 10000
 
-annualized_revenue_df, annualized_revenue_array = plot_etf_prices_and_revenue(path, etfs, start_date='2018-03-01', end_date='2024-05-20')
-print(annualized_revenue_df)
-print(annualized_revenue_array)
-
-# You can now visualize the `annualized_revenue_df` DataFrame and `annualized_revenue_array` NumPy array in Spyder's variable explorer
+simulator = ETFPortfolioSimulator(path, portfolios, initial_budget)
+simulator.load_data(start_date='2020-01-01', end_date='2024-05-20')
+simulator.calculate_investment_values()
+simulator.calculate_investment_values_no_rebalance()
+simulator.calculate_percentage_increase
