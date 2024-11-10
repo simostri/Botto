@@ -1,0 +1,10 @@
+[
+    {
+        "files": ["SGLD.MI.csv", "SPPW.DE.csv"],
+        "allocations": [0.4, 0.6],
+        "names": [
+            "Invesco Physical Gold A",
+            "SPDR MSCI World UCITS ETF"
+        ]
+    }
+]
