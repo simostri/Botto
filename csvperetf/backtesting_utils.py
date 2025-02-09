@@ -25,14 +25,14 @@ def initialize_data(path: str, portfolios: List[Tuple[List[str], List[float], Li
     """Initialize portfolio data by loading it with the load_data utility function."""
     return load_data(path, portfolios, start_date, end_date)
 
-def allocate_monthly_addition(portfolio_data: List[List[pd.DataFrame]], current_investments: List[float], etf_names: List[str], date, portfolio_index: int, monthly_increase: float):
-    """Allocate additional monthly investment to the ETF with the lowest performance."""
-    performance = []
-    for i, df in enumerate(portfolio_data[portfolio_index]):
-        initial_value = df.iloc[0].values[0]
-        current_value = df.loc[date].values[0]
-        performance.append((current_value / initial_value) - 1)
+def allocate_monthly_addition(current_investments: List[float], etf_names: List[str], percentage_increases: List[float], monthly_increase: float) -> List[float]:
+    """Allocate additional investment to the ETF that increased the least over the past month."""
     
-    lowest_performance_index = performance.index(min(performance))
+    # Identify the ETF with the smallest percentage increase
+    lowest_performance_index = percentage_increases.index(min(percentage_increases))
+    
+    # Allocate extra funds to that ETF
     current_investments[lowest_performance_index] += monthly_increase
-    print(f"Added ${monthly_increase} to {etf_names[lowest_performance_index]} for date {date}")
+    print(current_investments[lowest_performance_index])
+    
+    return current_investments
