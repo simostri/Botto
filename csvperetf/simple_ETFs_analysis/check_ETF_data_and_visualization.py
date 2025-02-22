@@ -169,7 +169,7 @@ class ETFPortfolioSimulator:
         return self.__dict__
 
 # Usage
-path = "/home/simone/Finance/Botto/csvperetf/"
+path = "/home/simone/Finance/Botto/csvperetf/data/"
 portfolios = [
     (['ITPS.SW.csv', 'IBGX.AS.csv', 'US10.PA.csv', 'IBCI.AS.csv', 'IBGL.AS.csv', 'SGLD.MI.csv','ICOM.L.csv', 'SPPW.DE.csv'], [0.1, 0.15, 0.1, 0.1, 0.1, 0.075, 0.075, 0.3], [
         'iShares $ TIPS UCITS ETF USD',
