@@ -23,6 +23,20 @@
         {"ticker": "XLU", "name": "Utilities Select Sector SPDR Fund"},   
         {"ticker": "XLP", "name": "Consumer Staples Select Sector SPDR Fund"},   
         {"ticker": "XLB", "name": "Materials Select Sector SPDR Fund"},   
-        {"ticker": "XLRE", "name": "Real Estate Select Sector SPDR Fund"}   
+        {"ticker": "XLRE", "name": "Real Estate Select Sector SPDR Fund"},
+        {"ticker": "ITPS.SW", "name": "iShares $ TIPS UCITS ETF USD"},
+        {"ticker": "IBGX.AS", "name": "iShares Euro Government Bond 3-5 Year UCITS"},
+        {"ticker": "US10.PA", "name": "Lyxor US Treasury 10+Y (DR) UCITS"},
+        {"ticker": "IBCI.AS", "name": "IShares Euro Inflation Linked Government Bond UCITS"},
+        {"ticker": "IBGL.AS", "name": "iShares Euro Government Bond 15-30yr UCITS"},
+        {"ticker": "SGLD.MI", "name": "Invesco Physical Gold A"},
+        {"ticker": "ICOM.L", "name": "Lyxor Commodities Refinitiv/CoreCommodity CRB TR UCITS"},
+        {"ticker": "SPPW.DE", "name": "SPDR MSCI World UCITS ETF"},
+        {"ticker": "VBK", "name": "Vanguard Small-Cap Growth Index Fund"},
+        {"ticker": "VBR", "name": "Vanguard Small-Cap Value Index Fund"},
+        {"ticker": "VUG", "name": "Vanguard Growth Index Fund"},
+        {"ticker": "VTV", "name": "Vanguard Value Index Fund"},
+        {"ticker": "VOO", "name": "Vanguard S&P 500"}
     ]
 }
+
