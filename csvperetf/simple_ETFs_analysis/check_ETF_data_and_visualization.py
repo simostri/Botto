@@ -99,44 +99,6 @@ class ETFPortfolioSimulator:
             self.investment_values.append({name: pd.Series(data=investment_values_over_time[name], index=dates) for name in etf_names})
             self.total_investments.append(pd.Series(data=total_investment_over_time, index=dates))
 
-
-    def calculate_investment_values_no_rebalance(self):
-        dates = self.portfolio_data[0][0].index[:-1]
-        
-        for n, (_, allocations, etf_names) in enumerate(self.portfolios):
-            quota_invested = [self.initial_budget * allocation for allocation in allocations]
-            investment_values_no_rebalance = {name: [] for name in etf_names}
-            total_investment_no_rebalance_over_time = []
-            
-            for date in dates:
-                current_investments = quota_invested.copy()
-                for i, df in enumerate(self.portfolio_data[n]):
-                    if date in df.index and dates[0] in df.index:
-                        percentage_increase = df.loc[date].values[0] / df.loc[dates[0]].values[0]
-                    
-                    current_investments[i] = quota_invested[i] * percentage_increase
-                    investment_values_no_rebalance[etf_names[i]].append(current_investments[i])
-                
-                total_investment_no_rebalance_over_time.append(sum(current_investments))
-            
-            self.investment_values_no_rebalance.append({name: pd.Series(data=investment_values_no_rebalance[name], index=dates) for name in etf_names})
-            self.total_investments_no_rebalance.append(pd.Series(data=total_investment_no_rebalance_over_time, index=dates))
-
-    def calculate_percentage_increase_no_rebalance(self):
-        dates = self.portfolio_data[0][0].index[:-1]
-        
-        for n, (_, allocations, etf_names) in enumerate(self.portfolios):
-            percentage_increase_no_rebalance = {name: [] for name in etf_names}
-            
-            for date in dates:
-                for i, df in enumerate(self.portfolio_data[n]):
-                    if date in df.index and dates[0] in df.index:
-                        percentage_increase = df.loc[date].values[0] / df.loc[dates[0]].values[0]
-                    
-                    percentage_increase_no_rebalance[etf_names[i]].append(percentage_increase)
-            
-            self.percentage_increase_no_rebalance.append({name: pd.Series(data=percentage_increase_no_rebalance[name], index=dates) for name in etf_names})
-
     def plot_results(self):
         plt.figure(figsize=(14, 7))
         for i, total_investment_df in enumerate(self.total_investments):
@@ -244,8 +206,6 @@ initial_budget = 10000  # Total budget for portfolio
 simulator = ETFPortfolioSimulator(path, portfolios, initial_budget)
 simulator.load_data(start_date='2019-01-01', end_date='2025-02-20')
 simulator.calculate_investment_values()
-simulator.calculate_investment_values_no_rebalance()
-simulator.calculate_percentage_increase_no_rebalance()
 simulator.plot_results()
 
 # Plot individual ETF investment values
