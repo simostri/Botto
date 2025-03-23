@@ -10,6 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import numpy as np
+import pdb
+
 
 class ETFPortfolioSimulator:
     def __init__(self, path, portfolios, initial_budget):
@@ -33,9 +35,7 @@ class ETFPortfolioSimulator:
             for file, etf_name in zip(portfolio_files, etf_names):
                 df = pd.read_csv(self.path + file, parse_dates=['Date'], index_col='Date', usecols=['Date', 'Close'])
                 df.index = pd.to_datetime(df.index,utc = True)
-                if df.index.tz is not None:
-                    df.index = df.index.tz_convert(None)
-                    df.index = df.index.normalize()
+                df.index = pd.to_datetime(df.index.date)  # remove time and keep only date
                 if end_date:
                     df = df[(df.index >= start_date) & (df.index <= end_date)]
                 else:
@@ -48,16 +48,25 @@ class ETFPortfolioSimulator:
 
     def calculate_investment_values(self):
         dates = self.portfolio_data[0][0].index[:-1]
-        self.rebalance_dates = dates[dates.month % 6 == dates[0].month % 6]
-        
+    
+        # Generate rebalance schedule every 6 months from start date
+        start = dates[0]
+        end = dates[-1]
+        rebalance_schedule = pd.date_range(start=start, end=end, freq='6MS')
+    
+        # Only use rebalance dates that exist in our dataset
+        self.rebalance_dates = dates[dates.isin(rebalance_schedule)]
+    
         for n, (_, allocations, etf_names) in enumerate(self.portfolios):
+            print('n is equal to ', n)
             quota_invested = [self.initial_budget * allocation for allocation in allocations]
             current_investments = quota_invested.copy()
             investment_values_over_time = {name: [] for name in etf_names}
             total_investment_over_time = []
-            print(etf_names)
-            print(n)
-            period_date_zero = dates[0]  # Initialize first rebalance date
+            date_old = [dates[0] for name in etf_names]
+            period_date_zero_old = [dates[0] for name in etf_names]  
+            period_date_zero = dates[0]  # First rebalance reference point
+            
             for date in dates:
                 if date in self.rebalance_dates:
                     period_date_zero = date
@@ -65,23 +74,31 @@ class ETFPortfolioSimulator:
                     quota_invested = [total_value * allocation for allocation in allocations]
                 percentage_increase = [1 for _ in allocations]
                 for i, df in enumerate(self.portfolio_data[n]):
-                    #print('I e uguale a', i)
-                    #print('I e uguale a', df.columns)
+                    print('df is equal to ',df.columns[0])
+                    print('date is ',date)
+                    print('i is equal to ',i)
+                    print('date old is ',date_old[i])
+                    #if pd.to_datetime(date) == pd.Timestamp('2021-07-29 00:00:00') and n == 2:
+                    #    pdb.set_trace()
                     if date in df.index and period_date_zero in df.index:
-                        percentage_increase[i] = df.loc[date].values[0] / df.loc[period_date_zero].values[0]
-                    else:
-                        #if date >=datetime(2020,8,1,0,0,0):
-                            #print('diocane')
+                        date_old[i] = date
+                        percentage_increase[i] = df.loc[date].values[0] / df.loc[period_date_zero].values[0]                    
                         
-                        percentage_increase[i] = 1  # Default to no change if the date is missing
-                    
+                    elif date> df.index[0] and date_old[i]>df.index[0] and period_date_zero in df.index:
+                        percentage_increase[i] = df.loc[date_old[i]].values[0] / df.loc[period_date_zero].values[0]                    
+                        
+                    elif date> df.index[0] and date_old[i]>df.index[0] and period_date_zero >= df.index[0]:
+                        period_date_zero_old[i] = date_old[i]
+                        percentage_increase[i] = df.loc[date_old[i]].values[0] / df.loc[period_date_zero_old[i]].values[0]                    
+                        
                     current_investments[i] = quota_invested[i] * percentage_increase[i]
                     investment_values_over_time[etf_names[i]].append(current_investments[i])
-                
+    
                 total_investment_over_time.append(sum(current_investments))
-            
+    
             self.investment_values.append({name: pd.Series(data=investment_values_over_time[name], index=dates) for name in etf_names})
             self.total_investments.append(pd.Series(data=total_investment_over_time, index=dates))
+
 
     def calculate_investment_values_no_rebalance(self):
         dates = self.portfolio_data[0][0].index[:-1]
@@ -96,8 +113,6 @@ class ETFPortfolioSimulator:
                 for i, df in enumerate(self.portfolio_data[n]):
                     if date in df.index and dates[0] in df.index:
                         percentage_increase = df.loc[date].values[0] / df.loc[dates[0]].values[0]
-                    else:
-                        percentage_increase = 1  # Default to no change if the date is missing
                     
                     current_investments[i] = quota_invested[i] * percentage_increase
                     investment_values_no_rebalance[etf_names[i]].append(current_investments[i])
@@ -117,8 +132,6 @@ class ETFPortfolioSimulator:
                 for i, df in enumerate(self.portfolio_data[n]):
                     if date in df.index and dates[0] in df.index:
                         percentage_increase = df.loc[date].values[0] / df.loc[dates[0]].values[0]
-                    else:
-                        percentage_increase = 1  # Default to no change if the date is missing
                     
                     percentage_increase_no_rebalance[etf_names[i]].append(percentage_increase)
             
@@ -229,7 +242,7 @@ portfolios = [
 initial_budget = 10000  # Total budget for portfolio
 
 simulator = ETFPortfolioSimulator(path, portfolios, initial_budget)
-simulator.load_data(start_date='2017-08-01', end_date='2025-02-20')
+simulator.load_data(start_date='2019-01-01', end_date='2025-02-20')
 simulator.calculate_investment_values()
 simulator.calculate_investment_values_no_rebalance()
 simulator.calculate_percentage_increase_no_rebalance()

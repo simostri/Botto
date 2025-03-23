@@ -21,8 +21,7 @@ def plot_etf_prices_and_revenue(path, etfs, start_date='2017-03-01', end_date=No
     for file, etf_name in etfs:
         df = pd.read_csv(path + file, parse_dates=['Date'], index_col='Date', usecols=['Date', 'Close'])
         df.index = pd.to_datetime(df.index, utc=True)
-        if df.index.tz is not None:
-            df.index = df.index.tz_convert(None)
+        df.index = pd.to_datetime(df.index.date)  # remove time and keep only date
         
         # Filter dataframe based on date range
         if end_date:
@@ -70,7 +69,7 @@ def plot_etf_prices_and_revenue(path, etfs, start_date='2017-03-01', end_date=No
     fig_revenue.show()
     
     # Prepare data for the table
-    years = sorted({year for revenue in etf_annualized_revenue.values() for year in revenue.index})
+    years = sorted({year for revenue in etf_annualized_revenue.values() for year in revenue.index}) # Maybe the redundancy at this line is because different Etfs might have different length
     annualized_revenue_df = pd.DataFrame(index=[etf for _, etf in etfs], columns=years)
     std_dev_df = pd.DataFrame(index=[etf for _, etf in etfs], columns=years)
     
