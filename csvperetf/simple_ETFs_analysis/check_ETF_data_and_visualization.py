@@ -58,7 +58,7 @@ class ETFPortfolioSimulator:
         self.rebalance_dates = dates[dates.isin(rebalance_schedule)]
     
         for n, (_, allocations, etf_names) in enumerate(self.portfolios):
-            print('n is equal to ', n)
+            #print('n is equal to ', n)
             quota_invested = [self.initial_budget * allocation for allocation in allocations]
             current_investments = quota_invested.copy()
             investment_values_over_time = {name: [] for name in etf_names}
@@ -74,10 +74,10 @@ class ETFPortfolioSimulator:
                     quota_invested = [total_value * allocation for allocation in allocations]
                 percentage_increase = [1 for _ in allocations]
                 for i, df in enumerate(self.portfolio_data[n]):
-                    print('df is equal to ',df.columns[0])
-                    print('date is ',date)
-                    print('i is equal to ',i)
-                    print('date old is ',date_old[i])
+                    #print('df is equal to ',df.columns[0])
+                    #print('date is ',date)
+                    #print('i is equal to ',i)
+                    #print('date old is ',date_old[i])
                     #if pd.to_datetime(date) == pd.Timestamp('2021-07-29 00:00:00') and n == 2:
                     #    pdb.set_trace()
                     if date in df.index and period_date_zero in df.index:
@@ -123,34 +123,9 @@ class ETFPortfolioSimulator:
                 
                 plt.plot(portfolio_investments[name].index, portfolio_investments[name], label=name)
         
-        plt.title('Percentage Revenue Over Time')
+        plt.title('Percentage Revenue Over Time (to fix - not a percentage)')
         plt.xlabel('Date')
         plt.ylabel('Percentage Revenue')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-
-    def plot_no_rebalance_vs_comparison(self):
-        plt.figure(figsize=(14, 7))
-        for i, total_investment_no_rebalance_df in enumerate(self.total_investments_no_rebalance):
-            plt.plot(total_investment_no_rebalance_df.index, total_investment_no_rebalance_df, label=f'Total Portfolio Investment (No Rebalance) for Portfolio {i + 1}')
-        
-        plt.title('Investment Value Over Time (No Rebalance)')
-        plt.xlabel('Date')
-        plt.ylabel('Investment Value ($)')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-
-    def plot_percentage_increase_no_rebalance(self):
-        plt.figure(figsize=(14, 7))
-        for i, percentage_increase_no_rebalance in enumerate(self.percentage_increase_no_rebalance):
-            for name, series in percentage_increase_no_rebalance.items():
-                plt.plot(series.index, series, label=f'{name} (Portfolio {i + 1})')
-        
-        plt.title('Percentage Increase Over Time (No Rebalance)')
-        plt.xlabel('Date')
-        plt.ylabel('Percentage Increase')
         plt.legend()
         plt.grid(True)
         plt.show()
@@ -204,17 +179,9 @@ portfolios = [
 initial_budget = 10000  # Total budget for portfolio
 
 simulator = ETFPortfolioSimulator(path, portfolios, initial_budget)
-simulator.load_data(start_date='2019-01-01', end_date='2025-02-20')
+simulator.load_data(start_date='2017-01-01', end_date='2025-02-20')
 simulator.calculate_investment_values()
 simulator.plot_results()
 
 # Plot individual ETF investment values
 simulator.plot_individual_investments()
-
-# Plot no rebalance vs comparison
-simulator.plot_no_rebalance_vs_comparison()
-
-# Plot percentage increase without rebalancing
-simulator.plot_percentage_increase_no_rebalance()
-
-# Plot selected ETFs percentage increase
