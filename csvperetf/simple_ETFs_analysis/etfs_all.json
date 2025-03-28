@@ -1,0 +1,150 @@
+[
+    {
+        "file": "VOO.csv",
+        "name": "Vanguard S&P 500 ETF"
+    },
+    {
+        "file": "VTI.csv",
+        "name": "Vanguard Total Stock Market ETF"
+    },
+    {
+        "file": "SPY.csv",
+        "name": "SPDR S&P 500 ETF Trust"
+    },
+    {
+        "file": "QQQ.csv",
+        "name": "Invesco QQQ Trust"
+    },
+    {
+        "file": "ARKK.csv",
+        "name": "ARK Innovation ETF"
+    },
+    {
+        "file": "VUG.csv",
+        "name": "Vanguard Growth ETF"
+    },
+    {
+        "file": "VTV.csv",
+        "name": "Vanguard Value ETF"
+    },
+    {
+        "file": "VBK.csv",
+        "name": "Vanguard Small-Cap Growth ETF"
+    },
+    {
+        "file": "VBR.csv",
+        "name": "Vanguard Small-Cap Value ETF"
+    },
+    {
+        "file": "VT.csv",
+        "name": "Vanguard Total World Stock ETF"
+    },
+    {
+        "file": "DIA.csv",
+        "name": "SPDR Dow Jones Industrial Average ETF Trust"
+    },
+    {
+        "file": "IWM.csv",
+        "name": "iShares Russell 2000 ETF"
+    },
+    {
+        "file": "IVV.csv",
+        "name": "iShares Core S&P 500 ETF"
+    },
+    {
+        "file": "XLF.csv",
+        "name": "Financial Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLK.csv",
+        "name": "Technology Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLV.csv",
+        "name": "Health Care Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLY.csv",
+        "name": "Consumer Discretionary Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLI.csv",
+        "name": "Industrial Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLE.csv",
+        "name": "Energy Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLC.csv",
+        "name": "Communication Services Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLU.csv",
+        "name": "Utilities Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLP.csv",
+        "name": "Consumer Staples Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLB.csv",
+        "name": "Materials Select Sector SPDR Fund"
+    },
+    {
+        "file": "XLRE.csv",
+        "name": "Real Estate Select Sector SPDR Fund"
+    },
+    {
+        "file": "ITPS.SW.csv",
+        "name": "iShares $ TIPS UCITS ETF USD"
+    },
+    {
+        "file": "IBGX.AS.csv",
+        "name": "iShares Euro Government Bond 3-5 Year UCITS"
+    },
+    {
+        "file": "US10.PA.csv",
+        "name": "Lyxor US Treasury 10+Y (DR) UCITS"
+    },
+    {
+        "file": "IBCI.AS.csv",
+        "name": "IShares Euro Inflation Linked Government Bond UCITS"
+    },
+    {
+        "file": "IBGL.AS.csv",
+        "name": "iShares Euro Government Bond 15-30yr UCITS"
+    },
+    {
+        "file": "SGLD.MI.csv",
+        "name": "Invesco Physical Gold A"
+    },
+    {
+        "file": "ICOM.L.csv",
+        "name": "Lyxor Commodities Refinitiv/CoreCommodity CRB TR UCITS"
+    },
+    {
+        "file": "SPPW.DE.csv",
+        "name": "SPDR MSCI World UCITS ETF"
+    },
+    {
+        "file": "VBK.csv",
+        "name": "Vanguard Small-Cap Growth Index Fund"
+    },
+    {
+        "file": "VBR.csv",
+        "name": "Vanguard Small-Cap Value Index Fund"
+    },
+    {
+        "file": "VUG.csv",
+        "name": "Vanguard Growth Index Fund"
+    },
+    {
+        "file": "VTV.csv",
+        "name": "Vanguard Value Index Fund"
+    },
+    {
+        "file": "VOO.csv",
+        "name": "Vanguard S&P 500"
+    }
+]
