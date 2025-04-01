@@ -103,5 +103,159 @@
     "type": "equity",
     "region": "US",
     "sector": "technology"
+  },
+  {
+    "file": "XLV.csv",
+    "name": "Health Care Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLY.csv",
+    "name": "Consumer Discretionary Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLI.csv",
+    "name": "Industrial Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLE.csv",
+    "name": "Energy Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLC.csv",
+    "name": "Communication Services Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLU.csv",
+    "name": "Utilities Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLP.csv",
+    "name": "Consumer Staples Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLB.csv",
+    "name": "Materials Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "XLRE.csv",
+    "name": "Real Estate Select Sector SPDR Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "ITPS.SW.csv",
+    "name": "iShares $ TIPS UCITS ETF USD",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "IBGX.AS.csv",
+    "name": "iShares Euro Government Bond 3-5 Year UCITS",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "US10.PA.csv",
+    "name": "Lyxor US Treasury 10+Y (DR) UCITS",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "IBCI.AS.csv",
+    "name": "IShares Euro Inflation Linked Government Bond UCITS",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "IBGL.AS.csv",
+    "name": "iShares Euro Government Bond 15-30yr UCITS",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "SGLD.MI.csv",
+    "name": "Invesco Physical Gold A",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "ICOM.L.csv",
+    "name": "Lyxor Commodities Refinitiv/CoreCommodity CRB TR UCITS",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "SPPW.DE.csv",
+    "name": "SPDR MSCI World UCITS ETF",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "VBK.csv",
+    "name": "Vanguard Small-Cap Growth Index Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "VBR.csv",
+    "name": "Vanguard Small-Cap Value Index Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "VUG.csv",
+    "name": "Vanguard Growth Index Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "VTV.csv",
+    "name": "Vanguard Value Index Fund",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
+  },
+  {
+    "file": "VOO.csv",
+    "name": "Vanguard S&P 500",
+    "type": "equity",
+    "region": "global",
+    "sector": "unspecified"
   }
 ]

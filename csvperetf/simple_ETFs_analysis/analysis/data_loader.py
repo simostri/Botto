@@ -3,11 +3,11 @@
 import pandas as pd
 import json
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Optional
 
-def load_etfs_from_json(json_file: str) -> List[Tuple[str, str]]:
+def load_etfs_from_json(json_file: str) -> List[dict]:
     with open(json_file, 'r') as f:
-        return [(item['file'], item['name']) for item in json.load(f)]
+        return json.load(f)
 
 def read_etf_data(filepath: Path, start_date: pd.Timestamp, end_date: Optional[pd.Timestamp]) -> pd.DataFrame:
     df = pd.read_csv(filepath, parse_dates=['Date'], usecols=['Date', 'Close'], index_col='Date')
