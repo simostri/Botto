@@ -1,5 +1,4 @@
 import streamlit as st
-import logging
 import json
 import pandas as pd
 from pathlib import Path
@@ -8,10 +7,6 @@ from analysis.core_analysis import plot_etf_prices_and_revenue
 from download_etf_data import download_etf_data
 from analysis.plotting import plot_technical_indicators
 
-# Silence Streamlit warning logs
-streamlit_loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict if name.startswith("streamlit")]
-for logger in streamlit_loggers:
-    logger.setLevel(logging.ERROR)
 
 # --- Page Config ---
 st.set_page_config(
@@ -125,14 +120,13 @@ else:
     st.warning("Please select at least one ETF to analyze.")
 
 # --- Technical Analysis Visualization ---
-# --- Technical Analysis Visualization ---
 if show_technicals and selected_ta_etf in file_map:
     ta_file = Path(DATA_PATH) / file_map[selected_ta_etf]
     df_price = pd.read_csv(ta_file, parse_dates=["Date"], index_col="Date")
     df_price.index = pd.to_datetime(df_price.index, utc=True).normalize()
     price = df_price["Close"]
 
-    plots = plot_technical_indicators(
+    figs = plot_technical_indicators(
         price,
         show_bollinger,
         show_sma,
@@ -141,14 +135,5 @@ if show_technicals and selected_ta_etf in file_map:
         show_macd,
         selected_ta_etf
     )
-
-    plot_technical_indicators(
-    price,
-    show_bollinger,
-    show_sma,
-    show_ema,
-    show_rsi,
-    show_macd,
-    selected_ta_etf,
-    render_inline=True
-)
+    for fig in figs:
+        st.plotly_chart(fig, use_container_width=True)
